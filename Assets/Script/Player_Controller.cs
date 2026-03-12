@@ -19,18 +19,16 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
     [Header("Nhặt vật phẩm")]
     public float banKinhNhat = 5f;
     private bool NutE = false;
-    private bool _daNhatRac = false; // BIẾN MỚI: Ổ khóa chống spam phím
+    private bool _daNhatRac = false; 
 
     public override void Spawned()
     {
         if (HasInputAuthority)
         {
-            // BẮT BUỘC CÓ DÒNG NÀY thì OnInput mới chạy
             Runner.AddCallbacks(this); 
         }
         else
         {
-            // Tắt Camera thằng khác (Bò viết chỗ này quá chuẩn!)
             Camera cam = GetComponentInChildren<Camera>();
             if (cam != null) cam.enabled = false;
             
@@ -46,7 +44,6 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
         {
             if (Keyboard.current.eKey.wasPressedThisFrame)
             {
-                // Bấm E phát là gọi điện thoại cho Host nhờ nhặt rác!
                 RPC_YeuCauNhatRac();
             }
         }
@@ -84,11 +81,11 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
             if (Obj.CompareTag("Rac"))
             {
                 NetworkObject nObj = Obj.GetComponent<NetworkObject>();
+                
                 if (nObj != null && nObj.IsValid)
                 {
-                    // Host nhận được lệnh, thay vì lẳng lặng xóa, 
-                    // Host sẽ cầm loa thông báo cho TẤT CẢ MỌI MÁY cùng xử lý cục rác này!
-                    RPC_AnRacTrenMoiMay(nObj);
+                    Runner.Despawn(nObj);
+                    break; 
                 }
             }
         }
@@ -102,31 +99,11 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
     {
         if (rac != null)
         {
-            // 1. NGAY LẬP TỨC ẨN CỤC RÁC ĐI TRÊN MÀN HÌNH TẤT CẢ MỌI NGƯỜI
-            // Cách này an toàn 100%, không bao giờ bị Fusion báo lỗi Destroy bậy bạ
             rac.gameObject.SetActive(false); 
 
-            // 2. Sau khi đã ẩn xong, Host (người cầm sổ đỏ) sẽ cắt mạng nó để dọn rác hệ thống
             if (HasStateAuthority)
             {
                 Runner.Despawn(rac);
-            }
-        }
-    }
-
-    private void Quetxungquanh()
-    {
-        Collider[] ketQuaQuet = Physics.OverlapSphere(transform.position, banKinhNhat);
-        foreach (var Obj in ketQuaQuet)
-        {
-            if (Obj.CompareTag("Rac"))
-            {
-                NetworkObject nObj = Obj.GetComponent<NetworkObject>();
-                if (nObj != null && nObj.IsValid)
-                {
-                    Debug.Log("<color=yellow>Tổng đài Host:</color> <color=green>Đã duyệt yêu cầu nhặt rác từ Client!</color>");
-                    Runner.Despawn(nObj); 
-                }
             }
         }
     }
