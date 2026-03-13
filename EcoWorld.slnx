@@ -1,8 +1,14 @@
 ﻿<Solution>
   <Project Path="Fusion.Unity.Editor.csproj" />
+<<<<<<< HEAD
   <Project Path="Fusion.Unity.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="ParrelSync.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
+=======
+  <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="Fusion.Unity.csproj" />
+>>>>>>> 460121f418c21d8f83ac4076fda2989786eaeda4
   <Project Path="Unity.Fusion.CodeGen.csproj" />
 </Solution>
