@@ -10,9 +10,17 @@ public struct DuLieuInput : INetworkInput
     public Vector2 moveInput;
 }
 
+public struct O_VatPham : INetworkStruct
+{
+    public int ItemID;
+    public int SoLuong; 
+}
+
 public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
 {
-    [SerializeField] [Header("Di chuyển")] CharacterController character;
+    [SerializeField]
+    
+    [Header("Di chuyển")] CharacterController character;
     public float speed = 5f;
     private Vector2 moveInputLocal;
     
@@ -20,6 +28,8 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
     public float banKinhNhat = 5f;
     private bool NutE = false;
     private bool _daNhatRac = false; 
+    [Networked, Capacity(20)] 
+    public NetworkArray<O_VatPham> TuiDo { get; }
 
     public override void Spawned()
     {
@@ -46,6 +56,14 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
             {
                 RPC_YeuCauNhatRac();
             }
+            if (Keyboard.current.iKey.wasPressedThisFrame)
+            {
+                if (InventoryManager.instance != null)
+                {
+                    // NÉM CÁI TÚI ĐỒ (TuiDo) VÀO TRONG HÀM NÀY:
+                    InventoryManager.instance.BatTatBalo(TuiDo); 
+                }
+            }
         }
     }
     
@@ -71,9 +89,8 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
     {
         moveInputLocal = value.Get<Vector2>();
     }
-
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
-    public void RPC_YeuCauNhatRac()
+    public void RPC_YeuCauNhatRac() 
     {
         Collider[] ketQuaQuet = Physics.OverlapSphere(transform.position, banKinhNhat);
         foreach (var Obj in ketQuaQuet)
@@ -81,16 +98,61 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
             if (Obj.CompareTag("Rac"))
             {
                 NetworkObject nObj = Obj.GetComponent<NetworkObject>();
+                XuLyItem theCanCuoc = Obj.GetComponent<XuLyItem>();
                 
-                if (nObj != null && nObj.IsValid)
+                if (nObj != null && nObj.IsValid && theCanCuoc != null && theCanCuoc.thongTinDoVat != null)
                 {
-                    Runner.Despawn(nObj);
-                    break; 
+                    int idThucTe = theCanCuoc.thongTinDoVat.itemID; 
+                    bool daNhat = false;
+                    
+                    for (int i = 0; i < TuiDo.Length; i++) {
+                        if (TuiDo[i].ItemID == idThucTe) {
+                            O_VatPham doVat = TuiDo[i];
+                            doVat.SoLuong++;
+                            TuiDo.Set(i, doVat);
+                            daNhat = true;
+                            break;
+                        }
+                    }
+
+                    if (!daNhat) {
+                        for (int i = 0; i < TuiDo.Length; i++) {
+                            if (TuiDo[i].ItemID == 0) { 
+                                TuiDo.Set(i, new O_VatPham { ItemID = idThucTe, SoLuong = 1 });
+                                daNhat = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (daNhat) {
+                        // --- SỬA Ở ĐÂY NÈ BÒ: GỌI CÁI LOA PHÁT THANH ---
+                        RPC_XoaRacKhapBanDo(nObj); 
+                        
+                        Debug.Log("<color=green>Server: Nhặt thành công ID: </color>" + idThucTe);
+                        break; 
+                    }
                 }
             }
         }
     }
 
+    // --- CÁI LOA PHÁT THANH ĐỂ XÓA RÁC (THAY THẾ CHO CÁI CŨ) ---
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void RPC_XoaRacKhapBanDo(NetworkObject rac)
+    {
+        if (rac != null && rac.IsValid)
+        {
+            // Máy nào cũng tự động giấu đi cho mượt
+            rac.gameObject.SetActive(false);
+
+            // Chỉ Trưởng phòng (StateAuthority) mới được phép ra lệnh xóa thật
+            if (rac.HasStateAuthority)
+            {
+                Runner.Despawn(rac);
+            }
+        }
+    }
     // ==========================================================
     // BƯỚC 2: HOST PHÁT LỆNH CHO CẢ LÀNG (Tất cả máy đều chạy hàm này)
     // ==========================================================
@@ -131,3 +193,4 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, Fusion.Sockets.ReliableKey key, float progress) { }
     #endregion
 }
+
