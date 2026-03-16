@@ -1,81 +1,83 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿// using System.Collections;
+// using System.Collections.Generic;
+// using UnityEngine;
 
-public class ModelCustomizer : MonoBehaviour {
-#if UNITY_EDITOR
+// public class ModelCustomizer : MonoBehaviour {
+// #if UNITY_EDITOR
 
-    [SerializeField]
-    private GameObject[] parts;
-    
-    [SerializeField]
-    private bool[] bools;
+
    
 
-    void Reset()
-    {
-        //create arrays
-        int n = transform.childCount;
-        parts = new GameObject[n];
-        bools = new bool[n];
-        //fill arrays
-        for (int i = 0; i < n; i++)
-        {
-            parts[i] = transform.GetChild(i).gameObject;
-            bools[i] = parts[i].activeSelf;
-        }
-        //refresh visible
-        RefreshVisibility();
-    }
+//     private GameObject[] parts;
+//     [SerializeField]
+//     private bool[] bools;
+//     [SerializeField]
 
-    public void RefreshVisibility()
-    {
-        int n = parts.Length;
-        for (int i = 0; i < n; i++)
-        {
-            parts[i].SetActive(bools[i]);
-        }
-    }
 
-    public string[] GetNames()
-    {
-        int n = parts.Length;
-        string[] strings = new string[n];
-        for (int i = 0; i < n; i++)
-        {
-            strings[i] = parts[i].name;
-        }
-        return strings;
-    }
+//     void Reset()
+//     {
+//         //create arrays
+//         int n = transform.childCount;
+//         parts = new GameObject[n];
+//         bools = new bool[n];
+//         //fill arrays
+//         for (int i = 0; i < n; i++)
+//         {
+//             parts[i] = transform.GetChild(i).gameObject;
+//             bools[i] = parts[i].activeSelf;
+//         }
+//         //refresh visible
+//         RefreshVisibility();
+//     }
 
-    public bool[] GetBools()
-    {
-        return bools;
-    }
+//     public void RefreshVisibility()
+//     {
+//         int n = parts.Length;
+//         for (int i = 0; i < n; i++)
+//         {
+//             parts[i].SetActive(bools[i]);
+//         }
+//     }
 
-    public void SetBool(int i, bool b){
-        bools[i] = b;
-        RefreshVisibility();
-    }
+//     public string[] GetNames()
+//     {
+//         int n = parts.Length;
+//         string[] strings = new string[n];
+//         for (int i = 0; i < n; i++)
+//         {
+//             strings[i] = parts[i].name;
+//         }
+//         return strings;
+//     }
 
-    public void ApplyMaterial(Material material)
-    {
-        foreach (MeshRenderer meshRenderer in GetComponentsInChildren<MeshRenderer>(true))
-        {
-            Material[] matArray = meshRenderer.sharedMaterials;
+//     public bool[] GetBools()
+//     {
+//         return bools;
+//     }
 
-            for (int i = 0; i < matArray.Length; i++)
-            {
-                matArray[i] = material;
-            }
+//     public void SetBool(int i, bool b){
+//         bools[i] = b;
+//         RefreshVisibility();
+//     }
 
-            meshRenderer.sharedMaterials = matArray;
-        }
-    }
+//     public void ApplyMaterial(Material material)
+//     {
+//         foreach (MeshRenderer meshRenderer in GetComponentsInChildren<MeshRenderer>(true))
+//         {
+//             Material[] matArray = meshRenderer.sharedMaterials;
 
-    public void DoReset()
-    {
-        Reset();
-    }
-#endif
-}
+//             for (int i = 0; i < matArray.Length; i++)
+//             {
+//                 matArray[i] = material;
+//             }
+
+//             meshRenderer.sharedMaterials = matArray;
+//         }
+//     }
+
+//     public void DoReset()
+//     {
+//         Reset();
+//     }
+// #endif
+// }
