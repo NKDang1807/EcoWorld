@@ -5,10 +5,12 @@ using UnityEngine;
 public class ModelCustomizer : MonoBehaviour {
 #if UNITY_EDITOR
 
+    [SerializeField]
     private GameObject[] parts;
+    
     [SerializeField]
     private bool[] bools;
-    [SerializeField]
+   
 
     void Reset()
     {
