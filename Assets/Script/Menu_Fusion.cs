@@ -1,68 +1,42 @@
 using Fusion;
 using UnityEngine;
 using System.Threading.Tasks;
-
+using TMPro;
+using Fusion.Photon.Realtime;
 public class Menu_Fusion : MonoBehaviour
 {
     private NetworkRunner runner;
+    public TMP_InputField inputSessionName;
+    public GameObject joinPlayer;
 
-    void Start()
-    {
-        // Tự động tìm hoặc tạo anh Giao Hàng (NetworkRunner)
-        runner = FindObjectOfType<NetworkRunner>();
-        if (runner == null)
-        {
-            runner = gameObject.AddComponent<NetworkRunner>();
-        }
-    }
-
-    // Hàm lõi: Gọi cửa Server
     async void KetNoi(GameMode cheDo)
     {
-        // 1. Gắn bộ quản lý Scene của Fusion vào
-        if (gameObject.GetComponent<NetworkSceneManagerDefault>() == null)
+        if (runner != null)
         {
-            gameObject.AddComponent<NetworkSceneManagerDefault>();
+            await runner.Shutdown();            
+            Destroy(runner.gameObject);
         }
+        Debug.Log("Bà mụ: Đang kết nối..." + inputSessionName.text.Trim());
+        var idRieng = new AuthenticationValues(System.Guid.NewGuid().ToString());
+        // 2. THUÊ ANH GIAO HÀNG MỚI TINH XƯỞNG
+        GameObject runnerObject = new GameObject("TienTrinhFusion");
+        runner = runnerObject.AddComponent<NetworkRunner>();
 
-        // 2. Ra lệnh kết nối VÀ KHAI BÁO SCENE TẠI ĐÂY!
+        // 3. RA LỆNH KẾT NỐI
         var ketQua = await runner.StartGame(new StartGameArgs()
         {
             GameMode = cheDo,
-            SessionName = "phongcuacao", 
-            Scene = SceneRef.FromIndex(1),
-            SceneManager = gameObject.GetComponent<NetworkSceneManagerDefault>()
+            SessionName = inputSessionName.text.Trim(), 
+            AuthValues = idRieng,
+            Scene = SceneRef.FromIndex(1), // Nhớ check Index trong Build Settings
+            SceneManager = runnerObject.AddComponent<NetworkSceneManagerDefault>()
+            
         });
-        if (ketQua.Ok)
-        {
-            Debug.Log("<color=green>Đã vào mạng thành công!</color>");
-            Canvas khungUI = GetComponent<Canvas>();
-            if (khungUI != null)
-            {
-                khungUI.enabled = false; 
-            }
-        }
-        else
-        {
-            Debug.LogError("Lỗi rồi Bò ơi: " + ketQua.ShutdownReason);
-        }
     }
 
-    // ==========================================
-    // CÁC HÀM NÀY ĐỂ BÒ KÉO VÀO SỰ KIỆN "ON CLICK" CỦA BUTTON TRONG UNITY
-    // ==========================================
-    public void BamNut_ChoiDon()
-    {
-        KetNoi(GameMode.Single);
-    }
-
-    public void BamNut_TaoPhong()
-    {
-        KetNoi(GameMode.Host);
-    }
-
-    public void BamNut_VaoPhong()
-    {
-        KetNoi(GameMode.Client);
-    }
+    public void BamNut_ChoiDon() { KetNoi(GameMode.Single); }
+    public void BamNut_TaoPhong() { KetNoi(GameMode.Host); }
+    public void BamNut_TenPhong() { joinPlayer.SetActive(true); }
+    public void BamNut_NhapPhong() { joinPlayer.SetActive(true); }
+    public void BamNut_VaoPhong() { KetNoi(GameMode.Client); }
 }

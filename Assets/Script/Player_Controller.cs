@@ -2,7 +2,6 @@ using UnityEngine;
 using Fusion;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
-using System.Diagnostics;
 
 public struct DuLieuInput : INetworkInput 
 {
@@ -20,63 +19,38 @@ public struct O_VatPham : INetworkStruct
 
 public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
 {
-    [SerializeField]
-    
-    [Header("Di chuyển")] CharacterController character;
+    [Header("Di chuyển")] 
+    public NetworkCharacterController character;
     public float speed = 5f;
     public float runfast = 15f;
-    public float run = 5f;
     private Vector2 moveInputLocal;
-    private bool isrunfast;          
     private bool sprintPressedLocal;
-
-
 
     [Header("Camera & Chuột")]
     public Transform cameraTransform;
     public float mouseSensitivity = 0.5f;
     private float xRotation = 0f;
-    private float yRotation = 0f; // Thêm trục Y để xoay trái/phải tự do
-    public float khoangCachCamera = 4f; // Khoảng cách từ cam đến lưng nhân vật
+    private float yRotation = 0f; 
+    public float khoangCachCamera = 4f; 
     private float mouseXLocalAcc;
     
     [Header("Nhặt vật phẩm")]
     public float banKinhNhat = 5f;
-    private bool NutE = false;
-    private bool _daNhatRac = false; 
 
-
-
-    [Header("Trọng lực")]
+    [Header("Trọng lực & Nhảy")]
     [Networked] public bool isJumping { get; set; }
-    public float gravity = -9.81f; // Lực hút Trái Đất chuẩn
-    private Vector3 vanTocRoi; // Biến để lưu trữ vận tốc rơi tự do
-    public float jumpForce = 5f; // Lực nhảy (Số càng to nhảy càng cao)
-    private bool jumpPressedLocal; // Lưu trạng thái bấm phím ở máy mình
-    public float thoiGianHoiNhay = 100f;
+    private bool jumpPressedLocal; 
+    public float thoiGianHoiNhay = 1f; // Đổi thành 1 giây cho dễ test
     [Networked] public TickTimer dongHoChoNhay { get; set; }
-
-
 
     [Networked, Capacity(20)] 
     public NetworkArray<O_VatPham> TuiDo { get; }
-    [Networked] 
-    private NetworkBool isrun { get; set; }
+    
+    [Networked] private NetworkBool isrun { get; set; }
     [Networked] private NetworkBool isSprinting { get; set; }
+    
     private Animator animator;
 
-
-
-
-
-
-
-
-
-
-
-
-    // Cái này khai báo ở đây để sau này dễ gọi, không phải GetComponent nhiều lần
     public override void Spawned()
     {
         animator = GetComponent<Animator>();
@@ -84,13 +58,11 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
         {
             if (character != null) character.enabled = false;
         }
+        
         if (HasInputAuthority)
         {
             Runner.AddCallbacks(this); 
-            // ĐÁ CAMERA RA NGOÀI ĐỂ NÓ ĐỘC LẬP, KHÔNG BỊ XOAY THEO THÂN HÌNH
         }
-        
-        
         else
         {
             if (character != null) character.enabled = true;
@@ -101,26 +73,10 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
             AudioListener listener = GetComponentInChildren<AudioListener>();
             if (listener != null) listener.enabled = false;
         }
-        
     }
 
-    
-
-
-
-
-
-
-
-
-
-
-
-
-    // Hàm này chạy mỗi khung hình, chuyên xử lý input từ bàn phím và chuột cho Player có quyền điều khiển (HasInputAuthority) 
     void Update()
     {
-        // GỘP CHUNG BÀN PHÍM VÀ CHUỘT VÀO 1 CÁI IF THÔI!
         if (HasInputAuthority && Keyboard.current != null && Mouse.current != null)
         {
             // 1. NHẶT ĐỒ
@@ -129,16 +85,16 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
                 RPC_YeuCauNhatRac();
             }
 
-
+            // 2. CHẠY NHANH
             sprintPressedLocal = Keyboard.current.leftShiftKey.isPressed;
 
-            // 2. NHẢY
+            // 3. NHẢY
             if (Keyboard.current.spaceKey.wasPressedThisFrame)
             {
                 jumpPressedLocal = true;
             }
 
-            // 3. MỞ / ĐÓNG BALO BẰNG PHÍM B
+            // 4. MỞ / ĐÓNG BALO BẰNG PHÍM B
             if (Keyboard.current.bKey.wasPressedThisFrame)
             {
                 if (InventoryManager.instance != null)
@@ -147,9 +103,7 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
                 }
             }
 
-            // ==========================================
-            // 4. KIỂM TRA TRẠNG THÁI BALO ĐỂ XỬ LÝ CHUỘT
-            // ==========================================
+            // 5. KIỂM TRA TRẠNG THÁI BALO ĐỂ XỬ LÝ CHUỘT
             bool baloDangMo = false;
             if (InventoryManager.instance != null)
             {
@@ -158,21 +112,17 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
 
             if (baloDangMo == true)
             {
-                // MỞ BALO: Hiện trỏ chuột lên, KHÔNG cho xoay camera
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
             }
             else
             {
-                // ĐÓNG BALO: Giấu trỏ chuột đi
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
 
-                // 1. Đọc dữ liệu chuột di chuyển
                 float mouseX = Mouse.current.delta.x.ReadValue() * mouseSensitivity;
                 float mouseY = Mouse.current.delta.y.ReadValue() * mouseSensitivity;
 
-                // 2. Tính toán góc quay tự do (Cả Lên/Xuống và Trái/Phải)
                 yRotation += mouseX;
                 xRotation -= mouseY;
                 xRotation = Mathf.Clamp(xRotation, -60f, 60f); 
@@ -180,123 +130,93 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
         }
     }
 
-
-
-
-
-
-    // Hàm này chạy sau tất cả Update() đã chạy xong, chuyên xử lý việc bám theo camera cho mượt mà (Có thể bỏ qua nếu không cần)
     void LateUpdate()
     {
-        // Hàm này chạy cuối cùng, đợi nhân vật bước đi xong thì Camera mới bám theo
         if (HasInputAuthority && cameraTransform != null)
         {
             Quaternion camRotation = Quaternion.Euler(xRotation, yRotation, 0f);
-            
-            // Điểm nhìn nhắm vào ngang vai nhân vật (Cộng thêm 1.5f chiều cao)
             Vector3 diemNhin = transform.position + Vector3.up * 1.5f; 
-            
             cameraTransform.position = diemNhin - (camRotation * Vector3.forward * khoangCachCamera);
             cameraTransform.rotation = camRotation;
         }
     }
 
-
-
-
-
-    // Hàm này chạy mỗi khung hình, chuyên xử lý vật lý di chuyển cho Player có quyền điều khiển (HasInputAuthority)
+    // =======================================================
+    // TRÁI TIM CỦA GAME MẠNG NẰM Ở ĐÂY NÈ BÒ!
+    // =======================================================
     public override void FixedUpdateNetwork()
     {
         if (!HasStateAuthority && !HasInputAuthority)
             return;
-        if (character.isGrounded)
+
+        if (GetInput(out DuLieuInput data))
         {
-            if (vanTocRoi.y < 0) vanTocRoi.y = -2f; 
-            isJumping = false;
-            
-            if (GetInput(out DuLieuInput dataJump) && dataJump.isJumpPressed)
+            // 1. SỬA LỖI Ở ĐÂY: Đổi IsGrounded thành Grounded
+            if (data.isJumpPressed && character.Grounded)
             {
-                if (dongHoChoNhay.ExpiredOrNotRunning(Runner) && dataJump.isJumpPressed) 
+                if (dongHoChoNhay.ExpiredOrNotRunning(Runner)) 
                 {
-                    vanTocRoi = new Vector3(vanTocRoi.x, jumpForce, vanTocRoi.z);
-                    
+                    character.Jump(); // Thằng NCC tự động tính lực búng lên
                     isJumping = true; 
-                    
                     dongHoChoNhay = TickTimer.CreateFromSeconds(Runner, thoiGianHoiNhay);
                 }
             }
-        }
-        else
-        {
-            vanTocRoi.y += gravity * Runner.DeltaTime;
-        }
+            else if (character.Grounded)
+            {
+                isJumping = false;
+            }
 
-        character.Move(vanTocRoi * Runner.DeltaTime);
-
-        // 2. XỬ LÝ DI CHUYỂN BẰNG PHÍM BẤM
-        if (GetInput(out DuLieuInput data))
-        {
+            // 2. XỬ LÝ DI CHUYỂN
             Vector3 huongDiChuyen = new Vector3(data.moveInput.x, 0f, data.moveInput.y);
             float tocDoHienTai = data.isRunfast ? runfast : speed; 
 
             isrun = data.moveInput.magnitude > 0.1f;
             isSprinting = isrun && data.isRunfast;
-            //Debug.Log("<color=green>Server:</color> Đang nhận lệnh chạy nhanh, tốc độ là: " + isSprinting);
+
             if (huongDiChuyen.magnitude >= 0.1f) 
             {
+                character.maxSpeed = tocDoHienTai; 
+                // Đi thẳng
+                character.Move(huongDiChuyen.normalized);
                 Quaternion huongMucTieu = Quaternion.LookRotation(huongDiChuyen);
-                transform.rotation = Quaternion.Slerp(transform.rotation, huongMucTieu, Runner.DeltaTime * 10f);
-                character.Move(huongDiChuyen.normalized * tocDoHienTai * Runner.DeltaTime);
+                transform.rotation = Quaternion.Slerp(transform.rotation, huongMucTieu, Runner.DeltaTime * 15f); 
+            }
+            else
+            {
+                // Truyền Vector zero để nhân vật phanh lại
+                character.Move(Vector3.zero);
             }
         }
-        
     }
-
-
-
 
     public override void Render()
     {
         if (animator != null)
         {
-            
             if(isJumping)
             {
                 isSprinting = false;
                 isrun = false;
                 animator.SetBool("isJump", isJumping);
-                
             }
             else if(!isJumping) animator.SetBool("isJump", false);
             
             animator.SetBool("isRunning", isrun); 
-            
             animator.SetBool("isRunFast", isSprinting);
         }
     }
 
-
-
-
-
-
-
-
-    //Hàm này nhận điều khiển từ update gửi đến fix
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {   
         var data = new DuLieuInput();
         if (!HasInputAuthority) return;
 
-        // 1. CHỈ GÓI HÀNG, KHÔNG XEM ĐỒNG HỒ Ở ĐÂY NỮA
         data.isJumpPressed = jumpPressedLocal;
 
-        // Lúc mở balo không cho điều khiển
         if (InventoryManager.instance != null && InventoryManager.instance.trangThaiBalo == true)
         {
             data.moveInput = Vector2.zero; 
-            data.isJumpPressed = false;    // Balo mở thì cấm nhảy
+            data.isJumpPressed = false;    
             data.mouseX = 0f;              
         }
         else
@@ -325,34 +245,11 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
         mouseXLocalAcc = 0f; 
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
     public void OnMove(InputValue value)
     {
         if (!HasInputAuthority) return;
         moveInputLocal = value.Get<Vector2>();
     }
-
-
-
-
-
-
-
-
-
-
-
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     public void RPC_YeuCauNhatRac() 
@@ -375,7 +272,6 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
                         Item thongTin = InventoryManager.instance.TraCuuItem(idThucTe);
                         if (thongTin != null) 
                         {
-                            // Bò check lại file Item.cs xem Bò đặt tên biến là isStackable hay stackable nha
                             isstack = thongTin.stackable; 
                         }
                     }
@@ -402,7 +298,6 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
 
                     if (daNhat) {
                         RPC_XoaRacKhapBanDo(nObj); 
-                        //Debug.Log("<color=green>Server: Nhặt thành công ID: </color>" + idThucTe);
                         break; 
                     }
                 }
@@ -410,27 +305,12 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-    // --- CÁI LOA PHÁT THANH ĐỂ XÓA RÁC (THAY THẾ CHO CÁI CŨ) ---
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_XoaRacKhapBanDo(NetworkObject rac)
     {
         if (rac != null && rac.IsValid)
         {
-            // Máy nào cũng tự động giấu đi cho mượt
             rac.gameObject.SetActive(false);
-
-            // Chỉ Trưởng phòng (StateAuthority) mới được phép ra lệnh xóa thật
             if (rac.HasStateAuthority)
             {
                 Runner.Despawn(rac);
@@ -438,29 +318,12 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // ==========================================================
-    // BƯỚC 2: HOST PHÁT LỆNH CHO CẢ LÀNG (Tất cả máy đều chạy hàm này)
-    // ==========================================================
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     public void RPC_AnRacTrenMoiMay(NetworkObject rac)
     {
         if (rac != null)
         {
             rac.gameObject.SetActive(false); 
-
             if (HasStateAuthority)
             {
                 Runner.Despawn(rac);
@@ -468,50 +331,6 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // ==========================================================
-    // GIẤU ĐỐNG NÀY ĐI BẰNG DẤU [-] CHO ĐỠ RÁC MẮT NHÉ BÒ
     #region Hàm trống bắt buộc của Interface
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player) { }
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
@@ -533,4 +352,3 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, Fusion.Sockets.ReliableKey key, float progress) { }
     #endregion
 }
-
