@@ -267,9 +267,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player_Controller
   character: {fileID: 7437510801115437309}
-  speed: 5
-  runfast: 15
-  run: 5
+  speed: 3
+  runfast: 10
+  run: 3
   cameraTransform: {fileID: 17911125521547612}
   mouseSensitivity: 0.1
   khoangCachCamera: 3

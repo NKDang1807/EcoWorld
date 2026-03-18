@@ -2,7 +2,7 @@ using UnityEngine;
 using Fusion;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
-using static UnityEditor.Progress;
+using System.Diagnostics;
 
 public struct DuLieuInput : INetworkInput 
 {
@@ -53,7 +53,7 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
     private Vector3 vanTocRoi; // Biến để lưu trữ vận tốc rơi tự do
     public float jumpForce = 5f; // Lực nhảy (Số càng to nhảy càng cao)
     private bool jumpPressedLocal; // Lưu trạng thái bấm phím ở máy mình
-    public float thoiGianHoiNhay = 1.2f;
+    public float thoiGianHoiNhay = 100f;
     [Networked] public TickTimer dongHoChoNhay { get; set; }
 
 
@@ -208,7 +208,7 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
     // Hàm này chạy mỗi khung hình, chuyên xử lý vật lý di chuyển cho Player có quyền điều khiển (HasInputAuthority)
     public override void FixedUpdateNetwork()
     {
-        if (!HasStateAuthority && !HasInputAuthority) 
+        if (!HasStateAuthority && !HasInputAuthority)
             return;
         if (character.isGrounded)
         {
@@ -217,7 +217,7 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
             
             if (GetInput(out DuLieuInput dataJump) && dataJump.isJumpPressed)
             {
-                if (dongHoChoNhay.ExpiredOrNotRunning(Runner)) 
+                if (dongHoChoNhay.ExpiredOrNotRunning(Runner) && dataJump.isJumpPressed) 
                 {
                     vanTocRoi = new Vector3(vanTocRoi.x, jumpForce, vanTocRoi.z);
                     
@@ -241,7 +241,6 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
             float tocDoHienTai = data.isRunfast ? runfast : speed; 
 
             isrun = data.moveInput.magnitude > 0.1f;
-            
             isSprinting = isrun && data.isRunfast;
             //Debug.Log("<color=green>Server:</color> Đang nhận lệnh chạy nhanh, tốc độ là: " + isSprinting);
             if (huongDiChuyen.magnitude >= 0.1f) 
@@ -261,8 +260,18 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
     {
         if (animator != null)
         {
+            
+            if(isJumping)
+            {
+                isSprinting = false;
+                isrun = false;
+                animator.SetBool("isJump", isJumping);
+                
+            }
+            else if(!isJumping) animator.SetBool("isJump", false);
+            
             animator.SetBool("isRunning", isrun); 
-            animator.SetBool("isJump", isJumping);
+            
             animator.SetBool("isRunFast", isSprinting);
         }
     }
@@ -279,41 +288,39 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
     {   
         var data = new DuLieuInput();
         if (!HasInputAuthority) return;
-        // Lúc mở balo không cho điều khiển (Đúng chuẩn ý Bò luôn)
+
+        // 1. CHỈ GÓI HÀNG, KHÔNG XEM ĐỒNG HỒ Ở ĐÂY NỮA
+        data.isJumpPressed = jumpPressedLocal;
+
+        // Lúc mở balo không cho điều khiển
         if (InventoryManager.instance != null && InventoryManager.instance.trangThaiBalo == true)
         {
-            data.moveInput = Vector2.zero; // không cho di chuyển
-            data.isJumpPressed = false;    // không cho nhảy
-            data.mouseX = 0f;              // KHÓA CỔ LUÔN
+            data.moveInput = Vector2.zero; 
+            data.isJumpPressed = false;    // Balo mở thì cấm nhảy
+            data.mouseX = 0f;              
         }
         else
         {
             Vector3 huongChuanBiGui = Vector3.zero;
             if (cameraTransform != null)
             {
-                // Lấy hướng Nhìn Thẳng và Nhìn Ngang của Camera hiện tại
                 Vector3 camForward = cameraTransform.forward;
                 Vector3 camRight = cameraTransform.right;
                 
-                // Bỏ trục Y đi để nhân vật không bị hướng bay lên trời
                 camForward.y = 0;
                 camRight.y = 0;
                 camForward.Normalize();
                 camRight.Normalize();
 
-                // Tính toán: Bấm W thì đi theo camForward, bấm D thì đi theo camRight
                 huongChuanBiGui = camForward * moveInputLocal.y + camRight * moveInputLocal.x;
             }
 
-            // Đóng gói cái hướng thật sự này gửi lên mạng
             data.moveInput = new Vector2(huongChuanBiGui.x, huongChuanBiGui.z);
-            data.isJumpPressed = jumpPressedLocal;
-            data.isRunfast = sprintPressedLocal;      // Hộp này dùng để tính Tốc Độ
+            data.isRunfast = sprintPressedLocal;      
         }
 
         input.Set(data);
         
-        // Gửi xong thì dọn sạch hộp chứa tạm
         jumpPressedLocal = false;
         mouseXLocalAcc = 0f; 
     }
