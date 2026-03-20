@@ -8,7 +8,8 @@ public class Menu_Fusion : MonoBehaviour
 {
     private NetworkRunner runner;
     public TMP_InputField inputSessionName;
-    public GameObject joinPlayer;
+    public GameObject coopPlayer;
+    public GameObject menu;
 
     async void KetNoi(GameMode cheDo)
     {
@@ -50,6 +51,9 @@ public class Menu_Fusion : MonoBehaviour
 
     public void BamNut_ChoiDon() { KetNoi(GameMode.Single); }
     public void BamNut_TaoPhong() { KetNoi(GameMode.Host); }
-    public void BamNut_TenPhong() { joinPlayer.SetActive(true); } 
+    public void BamNut_Coop() { coopPlayer.SetActive(true); 
+        menu.SetActive(false); } 
+        public void BamNut_Menu() { coopPlayer.SetActive(false); 
+        menu.SetActive(true); } 
     public void BamNut_VaoPhong() { KetNoi(GameMode.Client); }
 }
