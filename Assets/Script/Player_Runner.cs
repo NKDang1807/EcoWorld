@@ -4,18 +4,20 @@ using UnityEngine;
 // Kế thừa NetworkBehaviour để xài được hàm Spawned siêu xịn
 public class Player_Runner : NetworkBehaviour, IPlayerJoined
 {
-    [SerializeField] NetworkPrefabRef playerPrefab; 
-
-    // =======================================================
-    // 1. CHẠY KHI MAP 1 LOAD XONG (Đẻ cho Trưởng phòng)
-    // =======================================================
-    // Hàm này tự động chạy khi cái Object chứa script này xuất hiện trong mạng
+    [SerializeField] 
+    NetworkPrefabRef playerPrefab; 
+    NetworkPrefabRef enemyPrefab; 
+    public GameObject spawn;
+    public GameObject spawnenemy;
+    
     public override void Spawned()
     {
         if (Object.HasStateAuthority) 
         {
-            Vector3 vitrispawn = new Vector3(0, 5, 0);  
+            Vector3 vitrispawn = spawn.transform.position;
+            Vector3 viTriSpawnQuai = spawnenemy.transform.position;
             Runner.Spawn(playerPrefab, vitrispawn, Quaternion.identity, Runner.LocalPlayer);
+            Runner.Spawn(enemyPrefab, viTriSpawnQuai, Quaternion.identity, null);
         }
     }
 
@@ -28,7 +30,7 @@ public class Player_Runner : NetworkBehaviour, IPlayerJoined
         {
             if (player != Runner.LocalPlayer) 
             {
-                Vector3 vitrispawn = new Vector3(0, 5, 0);  
+                Vector3 vitrispawn = spawn.transform.position;  
                 Runner.Spawn(playerPrefab, vitrispawn, Quaternion.identity, player);
             }
         }
