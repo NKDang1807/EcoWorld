@@ -102,15 +102,25 @@ public class Player_Controller : NetworkBehaviour, INetworkRunnerCallbacks
                     InventoryManager.instance.BatTatBalo(TuiDo); 
                 }
             }
+            // 5. MỞ / ĐÓNG ESC BẰNG PHÍM ESC
 
-            // 5. KIỂM TRA TRẠNG THÁI BALO ĐỂ XỬ LÝ CHUỘT
-            bool baloDangMo = false;
-            if (InventoryManager.instance != null)
-            {
-                baloDangMo = InventoryManager.instance.trangThaiBalo;
+            bool ESCDangMo = false;
+            if (Keyboard.current.escapeKey.wasPressedThisFrame)            {
+                if (ESC.instance != null)
+                {
+                    ESC.instance.BatTatESC();
+                }
             }
 
-            if (baloDangMo == true)
+            // 6. KIỂM TRA TRẠNG THÁI BALO ĐỂ XỬ LÝ CHUỘT
+            bool baloDangMo = false;
+            if (InventoryManager.instance != null || ESC.instance != null)
+            {
+                baloDangMo = InventoryManager.instance.trangThaiBalo;
+                ESCDangMo = ESC.instance.isESC_Open;
+            }
+
+            if (baloDangMo == true || ESCDangMo == true)
             {
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
