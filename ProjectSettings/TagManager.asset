@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Items
   - Rac
+  - Wood
   layers:
   - Default
   - TransparentFX

@@ -590,7 +590,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 102946753}
   m_CullTransparentMesh: 1
- HEAD
 --- !u!1 &233034189
 GameObject:
   m_ObjectHideFlags: 0
@@ -677,6 +676,7 @@ GameObject:
   - component: {fileID: 233700888}
   - component: {fileID: 233700887}
   - component: {fileID: 233700886}
+  - component: {fileID: 233700889}
   m_Layer: 0
   m_Name: Prototype Runner
   m_TagString: Untagged
@@ -780,6 +780,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &233700889
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 233700885}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8edbe7108d8a43ab838cf8b8d9453df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Unity::Fusion.RunnerEnableVisibility
 --- !u!1 &472776518
 GameObject:
   m_ObjectHideFlags: 0
@@ -930,8 +942,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 476425357}
   m_CullTransparentMesh: 1
-
- 5e49e45a81a42f7516d6c0337c47f2e87a407da8
 --- !u!1 &592960196
 GameObject:
   m_ObjectHideFlags: 0
@@ -2053,19 +2063,14 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
- HEAD
   m_Children:
-  - {fileID: 1585389763}
   - {fileID: 476425358}
-
-  m_Children: []
- 5e49e45a81a42f7516d6c0337c47f2e87a407da8
   m_Father: {fileID: 1704690140}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 483, y: 323}
-  m_SizeDelta: {x: 440.2638, y: 142.4}
+  m_AnchoredPosition: {x: 480, y: 321}
+  m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &981243840
 MonoBehaviour:
@@ -2678,18 +2683,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cab2a9e419bff1c4da720f55e4d9e234, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Menu_Fusion
- HEAD
   nutTaoTenPhong: {fileID: 2078123352}
   inputSessionName: {fileID: 780943301}
   coopPlayer: {fileID: 1704690136}
   menu: {fileID: 2134334818}
-  hoverColor: {r: 0.67058825, g: 0.49803925, b: 0.3647059, a: 1}
-
-  runner: {fileID: 0}
-  inputSessionName: {fileID: 780943301}
-  coopPlayer: {fileID: 0}
-  menu: {fileID: 0}
- 5e49e45a81a42f7516d6c0337c47f2e87a407da8
+  hoverColor: {r: 1, g: 1, b: 0.8784314, a: 1}
 --- !u!1 &1547286396
 GameObject:
   m_ObjectHideFlags: 0
@@ -3100,7 +3098,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1704690137
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4016,7 +4014,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2134334819
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4111,3 +4109,4 @@ SceneRoots:
   - {fileID: 1258692631}
   - {fileID: 42429970}
   - {fileID: 1537253410}
+  - {fileID: 233700888}
